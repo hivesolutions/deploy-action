@@ -1,32 +1,62 @@
 # Hive Deploy Action
 
-GitHub Action that triggers a [`repository_dispatch`](https://docs.github.com/en/rest/repos/repos#create-a-repository-dispatch-event) event on a target repository.
+GitHub Action that triggers a [`repository_dispatch`](https://docs.github.com/en/rest/repos/repos#create-a-repository-dispatch-event) event on a target repository, with a domain-shaped API for the common deploy-trigger case.
 
 ## Usage
 
+Trigger a "latest" deploy (e.g. on a master push):
+
 ```yaml
 - uses: hivesolutions/deploy-action@v1
   with:
     repository: hivesolutions/infra-bemisc
-    event-type: deploy-mailog-latest
+    service: mailog
     token: ${{ secrets.INFRA_DEPLOY_PAT }}
 ```
 
-With a `client_payload`, the easiest form is the `payload-*` shorthand — any `with:` key prefixed with `payload-` becomes a top-level field on `client_payload`:
+Trigger a tagged deploy (e.g. on a git tag push):
 
 ```yaml
 - uses: hivesolutions/deploy-action@v1
   with:
     repository: hivesolutions/infra-bemisc
-    event-type: deploy-mailog
-    payload-tag: ${{ github.ref_name }}
+    service: mailog
+    tag: ${{ github.ref_name }}
+    token: ${{ secrets.INFRA_DEPLOY_PAT }}
+```
+
+`service` and `tag` map to the underlying `repository_dispatch` event:
+
+| `service` | `tag`     | `event_type`              | `client_payload`        |
+| --------- | --------- | ------------------------- | ----------------------- |
+| `mailog`  | (omitted) | `deploy-mailog-latest`    | `{}`                    |
+| `mailog`  | `v1.2.3`  | `deploy-mailog`           | `{"tag": "v1.2.3"}`     |
+
+## Lower-level inputs
+
+For non-deploy use cases or custom event names, set `event-type` directly. When `event-type` is provided, `service` and `tag` are ignored (no auto-payload):
+
+```yaml
+- uses: hivesolutions/deploy-action@v1
+  with:
+    repository: hivesolutions/infra-bemisc
+    event-type: rebuild-cache
+    token: ${{ secrets.INFRA_DEPLOY_PAT }}
+```
+
+Add arbitrary string fields to `client_payload` with `payload-*` keys:
+
+```yaml
+- uses: hivesolutions/deploy-action@v1
+  with:
+    repository: hivesolutions/infra-bemisc
+    service: mailog
+    tag: ${{ github.ref_name }}
     payload-env: production
     token: ${{ secrets.INFRA_DEPLOY_PAT }}
 ```
 
-The above sends `client_payload: {"tag": "v1.2.3", "env": "production"}`. All values arrive as strings — no type coercion.
-
-For nested or non-string payloads, use `client-payload` with a JSON string. `payload-*` keys are merged on top and take precedence:
+For nested payloads, use `client-payload` with a JSON string. `payload-*` keys are merged on top and take precedence:
 
 ```yaml
 - uses: hivesolutions/deploy-action@v1
@@ -41,13 +71,17 @@ For nested or non-string payloads, use `client-payload` with a JSON string. `pay
 
 ## Inputs
 
-| Name             | Required | Default | Description                                                                                          |
-| ---------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------- |
-| `repository`     | yes      | —       | Target repository in `owner/repo` format                                                             |
-| `event-type`     | yes      | —       | Value sent as `event_type`                                                                           |
-| `client-payload` | no       | `{}`    | JSON string sent as `client_payload`                                                                 |
-| `payload-*`      | no       | —       | Any input prefixed with `payload-` becomes a string field on `client_payload` (overrides JSON keys)  |
-| `token`          | yes      | —       | GitHub token (PAT) with `repo` scope on the target repository                                        |
+| Name             | Required | Default | Description                                                                                                |
+| ---------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------- |
+| `repository`     | yes      | —       | Target repository in `owner/repo` format                                                                   |
+| `service`        | no\*     | —       | Service name. Drives `event_type` as `deploy-{service}` (with tag) or `deploy-{service}-latest` (without)  |
+| `tag`            | no       | —       | Service tag. When set with `service`, also added as `client_payload.tag`                                   |
+| `event-type`     | no\*     | —       | Raw `event_type` value. Overrides any value derived from `service`. No auto-payload from `tag`             |
+| `client-payload` | no       | `{}`    | JSON string sent as `client_payload`                                                                       |
+| `payload-*`      | no       | —       | Any input prefixed with `payload-` becomes a string field on `client_payload` (overrides JSON keys)        |
+| `token`          | yes      | —       | GitHub token (PAT) with `repo` scope on the target repository                                              |
+
+\* Either `service` or `event-type` must be provided.
 
 ## Development
 

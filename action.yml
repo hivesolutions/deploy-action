@@ -8,9 +8,15 @@ inputs:
   repository:
     description: "Target repository in 'owner/repo' format"
     required: true
+  service:
+    description: "Name of the service to deploy. Drives event_type as 'deploy-{service}' (with tag) or 'deploy-{service}-latest' (without)."
+    required: false
+  tag:
+    description: "Service tag to deploy. When set, event_type becomes 'deploy-{service}' and 'tag' is added to client_payload. When omitted, event_type becomes 'deploy-{service}-latest'."
+    required: false
   event-type:
-    description: "Value of the 'event_type' field for the repository_dispatch event"
-    required: true
+    description: "Value of the 'event_type' field for the repository_dispatch event. Required if 'service' is not provided. Overrides the value derived from 'service'."
+    required: false
   client-payload:
     description: "JSON string sent as 'client_payload'. Defaults to '{}'. Merged with any 'payload-*' keys (the latter take precedence)."
     required: false

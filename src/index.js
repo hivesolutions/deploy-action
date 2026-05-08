@@ -4,7 +4,9 @@ const github = require("@actions/github");
 async function run() {
     try {
         const repository = core.getInput("repository", { required: true });
-        const eventType = core.getInput("event-type", { required: true });
+        const service = core.getInput("service");
+        const tag = core.getInput("tag");
+        const eventTypeRaw = core.getInput("event-type");
         const clientPayloadRaw = core.getInput("client-payload") || "{}";
         const token = core.getInput("token", { required: true });
 
@@ -15,6 +17,16 @@ async function run() {
             );
         }
 
+        let eventType = eventTypeRaw;
+        if (!eventType) {
+            if (!service) {
+                throw new Error(
+                    "Either 'service' or 'event-type' must be provided."
+                );
+            }
+            eventType = tag ? `deploy-${service}` : `deploy-${service}-latest`;
+        }
+
         let clientPayload;
         try {
             clientPayload = JSON.parse(clientPayloadRaw);
@@ -22,6 +34,10 @@ async function run() {
             throw new Error(
                 `Invalid 'client-payload' input: not valid JSON (${err.message})`
             );
+        }
+
+        if (tag && !eventTypeRaw) {
+            clientPayload.tag = tag;
         }
 
         for (const [envKey, envValue] of Object.entries(process.env)) {
