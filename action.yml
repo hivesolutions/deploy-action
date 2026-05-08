@@ -1,0 +1,23 @@
+name: "Hive Deploy Action"
+description: "Trigger a repository_dispatch event on a target repository"
+author: "Hive Solutions"
+branding:
+  icon: "send"
+  color: "orange"
+inputs:
+  repository:
+    description: "Target repository in 'owner/repo' format"
+    required: true
+  event-type:
+    description: "Value of the 'event_type' field for the repository_dispatch event"
+    required: true
+  client-payload:
+    description: "JSON string sent as 'client_payload'. Defaults to '{}'"
+    required: false
+    default: "{}"
+  token:
+    description: "GitHub token (PAT) with 'repo' scope on the target repository"
+    required: true
+runs:
+  using: "node20"
+  main: "dist/index.js"
