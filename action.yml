@@ -9,16 +9,22 @@ inputs:
     description: "Target repository in 'owner/repo' format"
     required: true
   service:
-    description: "Name of the service to deploy. Drives event_type as 'deploy-{service}' (with tag) or 'deploy-{service}-latest' (without)."
+    description: "Name of the service to deploy. When set, event_type defaults to 'deploy' and the service is added to client_payload."
+    required: false
+  group:
+    description: "Group (directory) the service belongs to (e.g. 'mail', 'apps'). Added to client_payload alongside 'service'. Required when 'service' is provided."
     required: false
   tag:
-    description: "Service tag to deploy. When set, event_type becomes 'deploy-{service}' and 'tag' is added to client_payload. When omitted, event_type becomes 'deploy-{service}-latest'."
+    description: "Service tag to deploy. When set with 'service', channel is 'stable' and 'tag' is added to client_payload. When omitted, channel is 'latest'."
+    required: false
+  channel:
+    description: "Override the channel ('stable' or 'latest'). Defaults to 'stable' when 'tag' is set, 'latest' otherwise."
     required: false
   event-type:
-    description: "Value of the 'event_type' field for the repository_dispatch event. Required if 'service' is not provided. Overrides the value derived from 'service'."
+    description: "Value of the 'event_type' field for the repository_dispatch event. Defaults to 'deploy' when 'service' is provided. Required if 'service' is not provided."
     required: false
   client-payload:
-    description: "JSON string sent as 'client_payload'. Defaults to '{}'. Merged with any 'payload-*' keys (the latter take precedence)."
+    description: "JSON string sent as 'client_payload'. Defaults to '{}'. Merged with any 'payload-*' keys and the auto-derived service/group/channel/tag (the latter take precedence)."
     required: false
     default: "{}"
   token:

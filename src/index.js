@@ -5,7 +5,9 @@ async function run() {
     try {
         const repository = core.getInput("repository", { required: true });
         const service = core.getInput("service");
+        const group = core.getInput("group");
         const tag = core.getInput("tag");
+        const channelRaw = core.getInput("channel");
         const eventTypeRaw = core.getInput("event-type");
         const clientPayloadRaw = core.getInput("client-payload") || "{}";
         const token = core.getInput("token", { required: true });
@@ -17,14 +19,22 @@ async function run() {
             );
         }
 
-        let eventType = eventTypeRaw;
+        const eventType = eventTypeRaw || (service ? "deploy" : null);
         if (!eventType) {
-            if (!service) {
-                throw new Error(
-                    "Either 'service' or 'event-type' must be provided."
-                );
-            }
-            eventType = tag ? `deploy-${service}` : `deploy-${service}-latest`;
+            throw new Error(
+                "Either 'service' or 'event-type' must be provided."
+            );
+        }
+        if (service && !group) {
+            throw new Error(
+                "'group' is required when 'service' is provided."
+            );
+        }
+        const channel = channelRaw || (tag ? "stable" : "latest");
+        if (channel !== "stable" && channel !== "latest") {
+            throw new Error(
+                `Invalid 'channel' input: '${channel}'. Expected 'stable' or 'latest'.`
+            );
         }
 
         let clientPayload;
@@ -36,8 +46,11 @@ async function run() {
             );
         }
 
-        if (tag && !eventTypeRaw) {
-            clientPayload.tag = tag;
+        if (service && !eventTypeRaw) {
+            clientPayload.service = service;
+            clientPayload.group = group;
+            clientPayload.channel = channel;
+            if (tag) clientPayload.tag = tag;
         }
 
         for (const [envKey, envValue] of Object.entries(process.env)) {
