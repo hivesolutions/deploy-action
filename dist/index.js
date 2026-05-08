@@ -31860,6 +31860,15 @@ async function run() {
             );
         }
 
+        for (const [envKey, envValue] of Object.entries(process.env)) {
+            if (!envKey.startsWith("INPUT_PAYLOAD-")) continue;
+            const payloadKey = envKey
+                .slice("INPUT_PAYLOAD-".length)
+                .toLowerCase();
+            if (!payloadKey) continue;
+            clientPayload[payloadKey] = envValue;
+        }
+
         const octokit = github.getOctokit(token);
 
         core.info(

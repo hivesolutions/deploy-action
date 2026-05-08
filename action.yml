@@ -12,7 +12,7 @@ inputs:
     description: "Value of the 'event_type' field for the repository_dispatch event"
     required: true
   client-payload:
-    description: "JSON string sent as 'client_payload'. Defaults to '{}'"
+    description: "JSON string sent as 'client_payload'. Defaults to '{}'. Merged with any 'payload-*' keys (the latter take precedence)."
     required: false
     default: "{}"
   token:
