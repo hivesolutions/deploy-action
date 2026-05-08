@@ -9,16 +9,16 @@ inputs:
     description: "Target repository in 'owner/repo' format"
     required: true
   service:
-    description: "Name of the service to deploy. When set, event_type defaults to 'deploy' and the service is added to client_payload."
+    description: "Service identity. Maps to the HCL file name (nomad/jobs/{group}/{service}.hcl). Use distinct service names for distinct deploys (e.g. 'mailog' vs 'mailog-latest')."
     required: false
   group:
-    description: "Group (directory) the service belongs to (e.g. 'mail', 'apps'). Added to client_payload alongside 'service'. Required when 'service' is provided."
+    description: "Group (directory) the service belongs to (e.g. 'mail', 'apps'). Required when 'service' is provided."
     required: false
   tag:
-    description: "Service tag to deploy. When set with 'service', channel is 'stable' and 'tag' is added to client_payload. When omitted, channel is 'latest'."
+    description: "Image tag. When set, the receiving deploy workflow rewrites image lines in the HCL to this tag and bumps deploy_version. When omitted, only deploy_version is bumped."
     required: false
   channel:
-    description: "Override the channel ('stable' or 'latest'). Defaults to 'stable' when 'tag' is set, 'latest' otherwise."
+    description: "Deprecated. Accepted for backwards compatibility and passed through to client_payload, but no longer drives behavior. Use distinct 'service' names instead."
     required: false
   event-type:
     description: "Value of the 'event_type' field for the repository_dispatch event. Defaults to 'deploy' when 'service' is provided. Required if 'service' is not provided."

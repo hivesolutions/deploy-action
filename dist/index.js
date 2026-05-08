@@ -31866,10 +31866,13 @@ async function run() {
                 "'group' is required when 'service' is provided."
             );
         }
-        const channel = channelRaw || (tag ? "stable" : "latest");
-        if (channel !== "stable" && channel !== "latest") {
+        if (
+            channelRaw &&
+            channelRaw !== "stable" &&
+            channelRaw !== "latest"
+        ) {
             throw new Error(
-                `Invalid 'channel' input: '${channel}'. Expected 'stable' or 'latest'.`
+                `Invalid 'channel' input: '${channelRaw}'. Expected 'stable' or 'latest'.`
             );
         }
 
@@ -31885,8 +31888,8 @@ async function run() {
         if (service && !eventTypeRaw) {
             clientPayload.service = service;
             clientPayload.group = group;
-            clientPayload.channel = channel;
             if (tag) clientPayload.tag = tag;
+            if (channelRaw) clientPayload.channel = channelRaw;
         }
 
         for (const [envKey, envValue] of Object.entries(process.env)) {
